@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interview Summary - AI Career Aid</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .summary-block {
+      background-color: #1e1e2f;
+      padding: 1rem;
+      margin: 1rem 0;
+      border-radius: 8px;
+    }
+    .summary-block h3 {
+      margin-bottom: 0.5rem;
+    }
+    .summary-block p {
+      margin: 0.25rem 0;
+    }
+  </style>
+  <script>
+    async function loadSummary() {
+      const res = await fetch('/full/summary_data');
+      const data = await res.json();
+      let html = "";
+      for (let i = 1; i <= 10; i++) {
+        const qKey = `question${i}`;
+        const questions = data.questions[qKey] || [];
+        const responses = data.responses[qKey] || [];
+        const feedback = data.feedbacks[qKey] || "No feedback recorded.";
+
+        html += `<div class='summary-block'>`;
+        html += `<h3>${qKey}</h3>`;
+        html += `<p><strong>Questions:</strong><br>${questions.map(q => `- ${q}`).join('<br>')}</p>`;
+        html += `<p><strong>Responses:</strong><br>${responses.map(r => `- ${r}`).join('<br>')}</p>`;
+        html += `<p><strong>Feedback:</strong><br>${feedback}</p>`;
+        html += `</div>`;
+      }
+      document.getElementById('summary').innerHTML = html;
+    }
+
+    window.onload = loadSummary;
+  </script>
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="logo"><a href="/">🎓 Employ AI</a></div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
+      <li><a href="/login">Login</a></li>
+    </ul>
+  </nav>
+  <main class="auth-container">
+    <h1>Mock Interview Summary</h1>
+    <div id="summary"></div>
+  </main>
+</body>
+</html>

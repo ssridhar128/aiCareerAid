@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generating Questions - Employ AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    async function generateQuestions() {
+      const res = await fetch('/full/generate-questions');
+      if (res.redirected) {
+        window.location.href = res.url;
+      }
+    }
+
+    let width = 1;
+    function animateProgressBar() {
+      const bar = document.getElementById("bar");
+      const interval = setInterval(() => {
+        if (width >= 100) {
+          clearInterval(interval);
+        } else {
+          width++;
+          bar.style.width = width + "%";
+        }
+      }, 50);
+    }
+
+    window.onload = () => {
+      animateProgressBar();
+      generateQuestions();
+    };
+  </script>
+  <style>
+    .progress-container {
+      width: 100%;
+      background-color: #444;
+      border-radius: 20px;
+      margin-top: 40px;
+    }
+    .progress-bar {
+      height: 30px;
+      width: 0;
+      background-color: #4caf50;
+      text-align: center;
+      line-height: 30px;
+      color: white;
+      border-radius: 20px;
+      transition: width 0.3s ease-in-out;
+    }
+  </style>
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="logo"><a href="/">🎓Employ AI</a></div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </nav>
+
+  <main class="auth-container">
+    <h1>Generating Your Interview Questions...</h1>
+    <div class="progress-container">
+      <div id="bar" class="progress-bar"></div>
+    </div>
+    <p style="margin-top: 20px;">This might take a few seconds. Hang tight!</p>
+  </main>
+</body>
+</html>

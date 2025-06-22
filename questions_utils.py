@@ -71,4 +71,6 @@ def mock_inter(res, job, industry, level):
     )
 
     messages.append({ "role": "assistant", "content": chat_completion.choices[0].message.content})
+    print("User prompt:\n", user_prompt) #debug to remove
+    print("Model reply:\n", chat_completion.choices[0].message.content)
     return chat_completion.choices[0].message.content

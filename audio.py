@@ -1,6 +1,6 @@
 import os
 from groq import Groq
-import speechbrain
+# import speechbrain
 from pyAudioAnalysis import audioBasicIO, ShortTermFeatures
 import numpy as np
 import pyaudio 
@@ -8,7 +8,7 @@ import wave
 import time
 import threading
 
-from speechbrain.inference.interfaces import foreign_class
+# from speechbrain.inference.interfaces import foreign_class
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
@@ -17,6 +17,7 @@ CHUNK = 2048
 UPLOAD_FOLDER = "uploads"
 OUTPUT_FILENAME = os.path.join(UPLOAD_FOLDER, "answer.wav")
 api_key = os.getenv("GROQ_API_KEY")
+api_key1 = os.getenv("LMNT_API_KEY")
 
 def audio_to_text(audio_path):
     client = Groq(api_key=api_key)

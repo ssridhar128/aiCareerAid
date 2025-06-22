@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Upload Resume | AI Career Aid</title>
+  <title>Upload Resume | Employ AI</title>
   <link rel="stylesheet" href="/static/resume.css" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
 </head>
@@ -11,10 +11,11 @@
 
   <!-- Navbar -->
   <nav class="navbar">
-    <div class="logo">AI Career Aid</div>
+    <div class="logo">Employ AI</div>
     <ul class="nav-links">
       <li><a href="/resume-upload">Resume Upload</a></li>
       <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
       <li><a href="/logout">Log Out</a></li>
     </ul>
   </nav>
@@ -29,8 +30,11 @@
       <button type="submit">Upload Resume</button>
       <button id="downloadResumeBtn" type="button">📥 Download Resume</button>
       <button id="deleteResumeBtn" type="button">🗑️ Delete Resume</button>
+      <button id="downloadResumeBtn" type="button">📥 Download Resume</button>
+      <button id="deleteResumeBtn" type="button">🗑️ Delete Resume</button>
       <div id="uploadStatus" class="upload-label" style="margin-top: 1rem;"></div>
     </form>
+  </div>
   </div>
 
   <script>

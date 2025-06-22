@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Resume Upload - Employ AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="logo"><a href="/">🎓Employ AI</a></div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
+      <li><a href="/logout">Log Out</a></li>
+    </ul>
+  </nav>
+
+  <main class="auth-container">
+    <h1>Enter position details</h1>
+    <form method="POST" action="/full/resume" enctype="multipart/form-data" class="auth-form">
+      <input type="text" name="job" placeholder="Job Title" required><br>
+      <input type="text" name="industry" placeholder="Industry" required><br>
+      <input type="text" name="level" placeholder="Experience Level" required><br>
+      <div class="button-wrapper">
+        <button type="submit"><a href="/full/questions-loading">Start Interview</a></button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI Career Aid — Cold Email Generator</title>
+  <title>Employ AI — Cold Email Generator</title>
   <link rel="stylesheet" href="/static/email.css">
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
 </head>
 <body class="dark-mode">
   <nav class="navbar">
-    <div class="logo"><a href="/">🎓AI Career Aid</a></div>
+    <div class="logo"><a href="/">🎓Employ AI</a></div>
     <ul class="nav-links">
       <li><a href="/resume-upload">Resume Upload</a></li>
       <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
       <li><a href="/logout">Log Out</a></li>
     </ul>
   </nav>
@@ -30,13 +31,9 @@
       </div>
     </form>
 
-<<<<<<< HEAD
     <div class="error-mess" >
       <div id="output" class="email-preview upload-label" style="display: none; white-space: pre-wrap; margin-top: 1.5rem;"></div>
     </div>
-=======
-    <div id="output" class="email-preview upload-label" style="display: none; white-space: pre-wrap; margin-top: 1.5rem;"></div>
->>>>>>> 87b2be6 (updates)
 
     <div class="button-wrapper">
       <button id="sendButton" style="display: none;">✉️ Send with Gmail</button>
@@ -70,7 +67,7 @@
           output.innerText = `❌ Error: ${data.error || 'Unknown error'}`;
         }
       } catch (err) {
-        output.innerText = "❌ Failed to generate email. Try again.";
+        output.innerText = "❌ Failed to generate email. Check requirements. Try again.";
       }
     });
 

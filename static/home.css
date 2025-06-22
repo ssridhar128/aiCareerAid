@@ -1,0 +1,89 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body.dark-mode {
+  background: #121212;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  background-color: #040311;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  background-color: #1f1f1f;
+  padding: 1rem 2rem;
+  align-items: center;
+  background-color: #08032c;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.logo a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.auth-container.home-box {
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    max-height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 2rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    border-radius: 1rem;
+    margin-top: 1rem;
+  }
+
+  .pitch-box h1 {
+    font-size: 2rem;             
+    font-weight: 800;
+    margin-bottom: 2rem;
+    margin-left: 5rem;
+    color: #ffffff;
+  }
+  
+  .pitch-box p {
+    font-size: 1rem;            
+    line-height: 2.4rem;
+    color: #dcdcdc;
+    margin-bottom: 3.5rem;
+    max-width: 70rem;
+    margin-left: 5rem;
+    margin-right: auto;
+  }
+
+  .pitch-box h3 {
+    font-size: 1rem;            
+    line-height: 2rem;
+    color: #dcdcdc;
+    max-width: 70rem;
+    margin-left: 5rem;
+    margin-right: auto;
+  }
+
+  .cta-btn {
+  font-size: 1rem;       
+  padding: 12px 24px;     
+  margin-left: 3.5rem;
+  }

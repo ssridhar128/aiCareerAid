@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, redirect, url_for, session, render_template
+from flask import Flask, jsonify, redirect, url_for, session, render_template, request
 import os
 import requests
 import fitz  # PyMuPDF
+from io import BytesIO
 from dotenv import load_dotenv
 from authlib.integrations.flask_client import OAuth
 from email.mime.text import MIMEText
@@ -10,6 +11,8 @@ import re
 import firebase_admin
 from firebase_admin import credentials, firestore, auth as fb_auth, storage
 import uuid
+from full_process import full_process_bp
+from flask_cors import CORS
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +27,10 @@ firebase_admin.initialize_app(cred, {
 })
 bucket = storage.bucket(name=os.getenv("FIREBASE_STORAGE_BUCKET"))
 db = firestore.client()
+
+CORS(app)
+# Register blueprints
+app.register_blueprint(full_process_bp, url_prefix="/full")
 
 # Google OAuth setup (for Gmail sending only)
 oauth = OAuth(app)
@@ -76,6 +83,24 @@ def show_signup():
 def show_login():
     return render_template("login.html")
 
+@app.route("/full/resume", methods=["GET"])
+def interview_resume_upload():
+    if "user_email" not in session:
+        return redirect("/login")
+    return render_template("interview-landing.html")
+
+@app.route("/full/questions-loading")
+def loading_page():
+    if "user_email" not in session:
+        return redirect("/login")
+    return render_template("generate-questions.html")
+
+@app.route("/full/questions")
+def questions():
+    if "user_email" not in session:
+        return redirect("/login")
+    return render_template("questions.html")
+
 @app.route("/signup", methods=["POST"])
 def signup():
     email = request.form.get("email")
@@ -96,7 +121,7 @@ def signup():
         })
         session["user_email"] = email
         session["user_name"] = full_name
-        return redirect("/generate-email")
+        return redirect("/")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -241,17 +266,34 @@ def fix_line_breaks(text):
 
 @app.route("/generate-email", methods=["POST"])
 def generate_email():
-    if "resume" not in request.files or not all(k in request.form for k in ["company", "full_name", "recruiter_name", "recruiter_email"]):
+    if not all(k in request.form for k in ["company", "recruiter_name", "recruiter_email"]):
         return jsonify({"error": "Missing required fields"}), 400
 
-    resume = request.files["resume"]
+    user_email = session["user_email"]
+    full_name = session["user_name"]
+    db = firestore.client()
+    user_doc = db.collection("users").document(user_email).get()
+
+    if not user_doc.exists or "resume_filename" not in user_doc.to_dict():
+        return redirect("/resume-upload")
+    
+    user_data = user_doc.to_dict()
+    if "resume_filename" not in user_data:
+        return redirect("/resume-upload")
+
     company = request.form["company"]
-    full_name = request.form["full_name"]
     recruiter_name = request.form["recruiter_name"]
     recruiter_email = request.form["recruiter_email"]
 
     try:
-        resume_text = extract_text_from_pdf(resume)
+        filename = user_data["resume_filename"]
+
+        bucket = storage.bucket()
+        blob = bucket.blob(f"resumes/{user_email}/{filename}")
+        resume_bytes = blob.download_as_bytes()
+
+        # Extract text
+        resume_text = extract_text_from_pdf(BytesIO(resume_bytes))
         sentences = re.split(r'(?<=[.!?]) +', resume_text)
         summary = ''
         for s in sentences:

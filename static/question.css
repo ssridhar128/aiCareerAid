@@ -58,7 +58,6 @@ body.dark-mode {
 .auth-form input[type="text"],
 .auth-form input[type="email"],
 .auth-form input[type="password"],
-.auth-form button[id="recordBtn"]
 .auth-form input[type="file"],
 .auth-form button {
   width: 80%;
@@ -140,5 +139,7 @@ body.dark-mode {
   display: flex;
   justify-content: center;
   width: autio;
-  max-height: 2.5rem;
+  max-height: 3rem;
+  max-width: 100%;
+  border-radius: 10rem;
 }

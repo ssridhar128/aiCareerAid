@@ -1,9 +1,5 @@
 import os
 import json
-import fitz
-from io import BytesIO
-import firebase_admin
-from firebase_admin import credentials, firestore, auth as fb_auth, storage
 from flask import Flask, Blueprint, app, request, jsonify, redirect, render_template
 from werkzeug.utils import secure_filename
 from utils.post_audio import feedback, follow_up_thread
@@ -11,7 +7,6 @@ from utils.resume_utils import extract_text, res_sum
 from utils.questions_utils import mock_inter
 from utils.audio import record, audio_features, groqInput, audio_to_text
 from flask import session
-import subprocess
 
 app.secret_key = os.getenv("SESSION_SECRET_KEY")
 
@@ -22,41 +17,42 @@ ALLOWED_EXTENSIONS = {"pdf", "wav"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def extract_text_from_pdf(pdf_file):
-    text = ""
-    with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
-        for page in doc:
-            text += page.get_text()
-    return text.strip()
 
 @full_process_bp.route("/resume", methods=["POST"])
 def resume():
-    session.clear()
-    user_email = session["user_email"]
-    db = firestore.client()
-    doc = db.collection("users").document(user_email).get()
+    file = request.files.get("resume")
     job = request.form.get("job")
     industry = request.form.get("industry")
     level = request.form.get("level")
-    if not doc.exists or "resume_filename" not in doc.to_dict():
-        return redirect("/resume-upload")
+
+    if not file or not allowed_file(file.filename):
+        return jsonify({"error": "Invalid or missing resume file."}), 400
     if not job or not industry or not level:
         return jsonify({"error": "Missing job, industry, or level."}), 400
-    user_data = doc.to_dict()
-    filename = user_data["resume_filename"]
-    bucket = storage.bucket()
-    blob = bucket.blob(f"resumes/{user_email}/{filename}")
-    resume_bytes = blob.download_as_bytes()
-    
-    resume_text = extract_text_from_pdf(BytesIO(resume_bytes))
-    summary_json = res_sum(job, resume_text)
+
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(file_path)
+
+    resume_text = extract_text(file_path)
+    while(True):
+        try:
+            summary_json = res_sum(job, resume_text)
+            break
+        except:
+            continue
     
     session["resume"] = summary_json
     session["job"] = job
     session["industry"] = industry
     session["level"] = level
+    
+    return redirect("/questions-loading")
 
-    return redirect("/full/questions-loading")
+@full_process_bp.route("/questions-loading")
+def loading_page():
+    return render_template("questions_loading.html")
 
 @full_process_bp.route("/generate-questions")
 def questions():
@@ -76,80 +72,54 @@ def questions():
     session["entropy"] = []
     session["energy"] = []
 
-    return redirect("/full/questions")
+    return redirect("/questions")
 
 @full_process_bp.route("/record", methods=["POST"])
-def audio_recording():
-    audio_file = request.files.get("audio")
-    if not audio_file:
-        return jsonify({"error": "No audio uploaded"}), 400
-
-    
-    webm_path = os.path.join(UPLOAD_FOLDER, "temp.webm")
-    wav_path = os.path.join(UPLOAD_FOLDER, "temp.wav")
-    audio_file.save(webm_path)
-
+def audio_recording(): 
+    file_path = record()
     zcr = session.get("zcr", [])
     energy = session.get("energy", [])
     entropy = session.get("entropy", [])
 
-    subprocess.run(["ffmpeg", "-i", webm_path, wav_path, "-y"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    store = audio_features(wav_path)
+    store = audio_features(file_path)
     zcr.append(store[0])
     energy.append(store[1])
     entropy.append(store[2])
-    session["zcr"] = zcr
+    session["zcr"] =zcr
     session["energy"] = energy
-    session["entropy"] = entropy
-
+    session["entropy"] =entropy
     responses = session.get("responses")
     q_key = f"question{session.get('curr_index')}"
-    responses.setdefault(q_key, []).append(audio_to_text(wav_path))
+    responses.setdefault(q_key, []).append(audio_to_text(file_path))
     session["responses"] = responses
 
     return jsonify({"message": "Audio processed successfully"})
 
 @full_process_bp.route("/followupfeedback", methods=["GET"])
 def post_quest():
-    index = session.get("curr_index")
     questions = session.get("questions")
-    responses = session.get("responses")
-
-    q_key = f"question{index}"
-    q_thread = questions.get(q_key, [])
-    r_thread = responses.get(q_key, [])
-
-    if len(q_thread) == 1:
-        # Only original question so far → generate follow-up
-        raw = follow_up_thread(q_thread, r_thread,
-                                 session.get("resume"),
-                                 session.get("job"),
-                                 session.get("industry"),
-                                 session.get("level"))
-        parsed = json.loads(raw) if isinstance(raw, str) else raw
-        new_q = parsed["new_q"]
-        if new_q:
-            q_thread.append(new_q)
-            questions[q_key] = q_thread
-            session["questions"] = questions
-            return redirect("/full/questions")  # go back to UI for follow-up recording
-
-    # Otherwise, it's time for feedback
-    fback = feedback(q_thread, r_thread,
-                     session.get("energy"),
-                     session.get("entropy"),
-                     session.get("zcr"),
-                     session.get("resume"))
-    feedbacks = session.get("feedbacks", {})
-    feedbacks[q_key] = fback
-    session["feedbacks"] = feedbacks
-
-    return jsonify({
-        "Message": f"Feedback saved for question {index}. Click next to continue.",
-        f"{q_key} feedback": fback
-    })
-
+    q_thread = questions[f"question{session.get('curr_index')}"]
+    question = ""
+    if(len(q_thread) == 1):
+        responses = session.get("responses")
+        r_thread = responses[f"question{session.get('curr_index')}"]
+        question = follow_up_thread(q_thread,r_thread, session.get("resume"), session.get("job"), session.get("industry"), session.get("level"))["new_q"]
+    if(question != ""):
+        q_thread.append(question)
+        questions[f"question{session.get('curr_index')}"] = q_thread
+        session["questions"] = questions
+        return redirect("/record")
+    else:
+        fback = feedback(q_thread, r_thread, 
+                session.get("energy"), session.get("entropy"), session.get("zcr"), session.get("resume"))
+        feedbacks = session.get("feedbacks")
+        feedbacks[f"question{session.get('curr_index')}"] = fback
+        session["feedbacks"] = feedbacks
+        return jsonify({
+            f"Message": "Feedback saved for question {session.get('curr_index')}. Click next to continue.",
+            f"question{session.get('curr_index')} feedback": fback
+        })
+    
 @full_process_bp.route("/current_question", methods=["POST"])
 def get_q():
     index = session.get("curr_index")
@@ -158,6 +128,7 @@ def get_q():
         return jsonify({"error": "No more questions"}), 404
     
     quest = session.get("questions")[f"question{index}"]
+    
     return quest
 
 @full_process_bp.route("/next_question", methods=["GET"])
@@ -174,17 +145,8 @@ def next_q():
     session["entropy"] = []
     return jsonify({"message": f"Moved to question {index + 1}"})
 
-@full_process_bp.route("/summary")
-def summary_page():
-    return render_template("summary.html")
 
-@full_process_bp.route("/summary_data")
-def summary_data():
-    return jsonify({
-        "questions": session.get("questions", {}),
-        "responses": session.get("responses", {}),
-        "feedbacks": session.get("feedbacks", {})
-    })
+    
 
 
 

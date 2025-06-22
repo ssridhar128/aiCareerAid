@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interview Question - Employ AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let isFollowupPending = false;
+
+    async function loadQuestion() {
+      const res = await fetch('/full/current_question', { method: 'POST' });
+      const q = await res.text();
+      document.getElementById('question').innerText = q;
+    }
+
+    async function startRecording() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      audioChunks = [];
+
+      mediaRecorder.ondataavailable = e => {
+        audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'answer.webm');
+
+        await fetch('/full/record', {
+          method: 'POST',
+          body: formData
+        });
+
+        document.getElementById('followupBtn').style.display = 'inline-block';
+        document.getElementById('nextBtn').style.display = 'inline-block';
+      };
+
+      document.getElementById('recordBtn').innerText = 'Stop Recording';
+      document.getElementById('recordBtn').onclick = stopRecording;
+    }
+
+    function stopRecording() {
+      mediaRecorder.stop();
+      document.getElementById('recordBtn').innerText = 'Record Answer';
+      document.getElementById('recordBtn').onclick = startRecording;
+    }
+
+    async function triggerFollowup() {
+      const res = await fetch('/full/followupfeedback');
+      if (res.redirected) {
+        location.href = res.url;
+        return;
+      }
+      const data = await res.json();
+      if (data.Message) {
+        document.getElementById('feedback').innerText = data.Message;
+      }
+      document.getElementById('followupBtn').style.display = 'none';
+    }
+
+    async function nextQuestion() {
+      const res = await fetch('/full/next_question');
+      const data = await res.json();
+      if (data.error) {
+        window.location.href = "/full/summary";
+      } else {
+        loadQuestion();
+        document.getElementById('feedback').innerText = "";
+        document.getElementById('nextBtn').style.display = 'none';
+        document.getElementById('followupBtn').style.display = 'none';
+      }
+    }
+
+    window.onload = loadQuestion;
+  </script>
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="logo"><a href="/">🎓Employ AI</a></div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/full/resume">Mock Interview</a></li>
+      <li><a href="/logout">Logout</a></li>
+    </ul>
+  </nav>
+  <main class="auth-container">
+    <h1>Interview Question</h1>
+    <p id="question">Loading...</p>
+    <div class="button-wrapper">
+      <button id="recordBtn" onclick="startRecording()">Record Answer</button>
+      <p id="feedback"></p>
+    <div class="button-wrapper">
+      <button id="followupBtn" onclick="triggerFollowup()" style="display:none;">Ask Follow-up</button>
+      <button id="nextBtn" onclick="nextQuestion()" style="display:none;">Next Question</button>
+    </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -8,7 +8,7 @@ from email.mime.text import MIMEText
 import base64
 import re
 import firebase_admin
-from firebase_admin import credentials, firestore, auth as fb_auth
+from firebase_admin import credentials, firestore, auth as fb_auth, storage
 
 # Load environment variables
 load_dotenv()
@@ -19,12 +19,13 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "this_should_be_configured")
 # Firebase setup
 cred = credentials.Certificate("firebase_service_account.json")
 firebase_admin.initialize_app(cred)
+# bucket = storage.bucket(name=os.getenv("FIREBASE_STORAGE_BUCKET"))
 db = firestore.client()
 
 # Google OAuth setup (for Gmail sending only)
 oauth = OAuth(app)
-google = oauth.register(
-    name='google',
+google_gmail = oauth.register(
+    name='google_gmail',
     client_id=os.getenv("GOOGLE_CLIENT_ID"),
     client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
     access_token_url='https://oauth2.googleapis.com/token',
@@ -36,6 +37,23 @@ google = oauth.register(
         'access_type': 'offline'
     }
 )
+
+google_login = oauth.register(
+    name='google_login',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    access_token_url='https://oauth2.googleapis.com/token',
+    authorize_url='https://accounts.google.com/o/oauth2/v2/auth',
+    api_base_url='https://www.googleapis.com/oauth2/v3/',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',  # <--- add this
+    client_kwargs={
+        'scope': 'openid email profile',
+        'prompt': 'consent',
+        'access_type': 'offline'
+    }
+)
+
+
 
 @app.route("/")
 def home():
@@ -82,7 +100,7 @@ def signup():
 @app.route("/login", methods=["POST"])
 def login_user():
     email = request.form.get("email")
-    password = request.form.get("password")
+    password = request.form.get("passwoh rd")
 
     if not all([email, password]):
         return jsonify({"error": "Missing email or password"}), 400
@@ -206,13 +224,50 @@ Please generate the full body of a **professional, personalized cold email** tha
 # =============================
 # Gmail Sending via Google Auth
 # =============================
+@app.route("/login/google")
+def login_with_google():
+    redirect_uri = url_for("google_authorize", _external=True)
+    return google_login.authorize_redirect(redirect_uri)
+
+@app.route("/authorize-google")
+def google_authorize():
+    token = google_login.authorize_access_token()
+    user_info_resp = google_login.get("userinfo")
+    if not user_info_resp.ok:
+        return jsonify({"error": "Failed to get user info from Google", "details":user_info_resp.text}), 400
+    
+    user_info = user_info_resp.json()
+    email = user_info.get("email")
+    name = user_info.get("name")
+    
+
+    if not email:
+        return jsonify({"error": "Failed to get user info from Google"}), 400
+
+    try:
+        try:
+            user = fb_auth.get_user_by_email(email)
+        except fb_auth.UserNotFoundError:
+            user = fb_auth.create_user(email=email, display_name=name)
+            db.collection("users").document(user.uid).set({
+                "email": email,
+                "name": name
+            })
+
+        session["user_email"] = email
+        session["user_name"] = name
+        return redirect("/form")
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route("/gmail-login")
 def gmail_login():
-    return google.authorize_redirect(url_for('authorize', _external=True))
+    return google_gmail.authorize_redirect(url_for('authorize', _external=True))
 
 @app.route("/authorize")
 def authorize():
-    token = google.authorize_access_token()
+    token = google_gmail.authorize_access_token()
     session['token'] = token
     return redirect(url_for('send_email'))
 
@@ -221,7 +276,7 @@ def send_email():
     token = session.get('token')
     if not token:
         return redirect(url_for('authorize'))
-    google.token = token
+    google_gmail.token = token
 
     try:
         email_body = session.get("email_body")
@@ -236,7 +291,7 @@ def send_email():
 
         raw_msg = base64.urlsafe_b64encode(mime_msg.as_bytes()).decode()
 
-        send_response = google.post(
+        send_response = google_gmail.post(
             'gmail/v1/users/me/messages/send',
             json={'raw': raw_msg}
         )
@@ -244,7 +299,7 @@ def send_email():
         if send_response.ok:
             return render_template("sent.html")
         else:
-            return jsonify({"error": "❌ Failed to send email", "details": send_response.json()}), 500
+            return jsonify({"error": "Failed to send email", "details": send_response.json()}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -256,3 +311,4 @@ def sent_page():
 # Run app
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+    

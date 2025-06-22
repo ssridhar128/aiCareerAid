@@ -31,7 +31,6 @@ def extract_text_from_pdf(pdf_file):
 
 @full_process_bp.route("/resume", methods=["POST"])
 def resume():
-    session.clear()
     user_email = session["user_email"]
     db = firestore.client()
     doc = db.collection("users").document(user_email).get()

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: employAI
+    env: python
+    buildCommand: "python apptest.py"
+    startCommand: gunicorn app:app

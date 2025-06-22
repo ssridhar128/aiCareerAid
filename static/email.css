@@ -101,8 +101,14 @@ button {
   cursor: pointer;
   align-self: flex;
   transition: background-color 0.3s ease;
+  width: 100%;
+  flex-direction: column;
+  justify-content: left;
 }
 
+button:hover {
+  background-color: #3f3ccf;
+}
 button:hover {
   background-color: #3f3ccf;
 }

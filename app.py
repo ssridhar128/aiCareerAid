@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template
 import os
 from flask_cors import CORS
 from full_process import full_process_bp 
@@ -15,8 +15,8 @@ CORS(app)
 app.register_blueprint(full_process_bp, url_prefix="/full")
 
 @app.route("/")
-def health():
-    return {"status": "ok"}, 200
+def home():
+    return render_template("interview_landing.html")
     
 
 

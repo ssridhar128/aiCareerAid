@@ -140,5 +140,24 @@ body.dark-mode {
   display: flex;
   justify-content: center;
   width: autio;
-  max-height: 2.5rem;
+  }
+
+#recordBtn,
+#followupBtn,
+#nextBtn {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  border-radius: 20px;
+  background-color: #ffffff;
+  color: #121212;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin: 0.5rem; /* adds equal spacing between buttons */
+  flex: 1 1 200px; /* responsive flex grow/shrink */
+}
+
+
+#recordBtn:hover {
+  background-color: #e0e0e0;
 }

@@ -224,43 +224,6 @@ Please generate the full body of a **professional, personalized cold email** tha
 # =============================
 # Gmail Sending via Google Auth
 # =============================
-@app.route("/login/google")
-def login_with_google():
-    redirect_uri = url_for("google_authorize", _external=True)
-    return google_login.authorize_redirect(redirect_uri)
-
-@app.route("/authorize-google")
-def google_authorize():
-    token = google_login.authorize_access_token()
-    user_info_resp = google_login.get("userinfo")
-    if not user_info_resp.ok:
-        return jsonify({"error": "Failed to get user info from Google", "details":user_info_resp.text}), 400
-    
-    user_info = user_info_resp.json()
-    email = user_info.get("email")
-    name = user_info.get("name")
-    
-
-    if not email:
-        return jsonify({"error": "Failed to get user info from Google"}), 400
-
-    try:
-        try:
-            user = fb_auth.get_user_by_email(email)
-        except fb_auth.UserNotFoundError:
-            user = fb_auth.create_user(email=email, display_name=name)
-            db.collection("users").document(user.uid).set({
-                "email": email,
-                "name": name
-            })
-
-        session["user_email"] = email
-        session["user_name"] = name
-        return redirect("/form")
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @app.route("/gmail-login")
 def gmail_login():
     return google_gmail.authorize_redirect(url_for('authorize', _external=True))

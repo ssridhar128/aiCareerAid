@@ -11,7 +11,7 @@
 
     async function loadQuestion() {
       const res = await fetch('/full/current_question', { method: 'POST' });
-      const q = await res.text();
+      const q = await res.json();
       document.getElementById('question').innerText = q;
     }
 
@@ -78,27 +78,27 @@
     window.onload = loadQuestion;
   </script>
 </head>
-<body class="dark-mode">
-  <nav class="navbar">
-    <div class="logo"><a href="/">🎓Employ AI</a></div>
-    <ul class="nav-links">
-      <li><a href="/resume-upload">Resume Upload</a></li>
-      <li><a href="/generate-email">Generate Email</a></li>
-      <li><a href="/full/resume">Mock Interview</a></li>
-      <li><a href="/logout">Logout</a></li>
-    </ul>
-  </nav>
-  <main class="auth-container">
-    <h1>Interview Question</h1>
-    <p id="question">Loading...</p>
-    <div class="button-wrapper">
-      <button id="recordBtn" onclick="startRecording()">Record Answer</button>
-      <p id="feedback"></p>
-    <div class="button-wrapper">
-      <button id="followupBtn" onclick="triggerFollowup()" style="display:none;">Ask Follow-up</button>
-      <button id="nextBtn" onclick="nextQuestion()" style="display:none;">Next Question</button>
-    </div>
-    </div>
-  </main>
-</body>
+  <body class="dark-mode">
+    <nav class="navbar">
+      <div class="logo"><a href="/">🎓Employ AI</a></div>
+      <ul class="nav-links">
+        <li><a href="/resume-upload">Resume Upload</a></li>
+        <li><a href="/generate-email">Generate Email</a></li>
+        <li><a href="/full/resume">Mock Interview</a></li>
+        <li><a href="/logout">Logout</a></li>
+      </ul>
+    </nav>
+    <main class="auth-container">
+      <h1>Interview Question</h1>
+      <p id="question">Loading...</p>
+      <div class="button-wrapper">
+        <button id="recordBtn" onclick="startRecording()">Record Answer</button>
+        <p id="feedback"></p>
+      </div>
+      <div class="button-wrapper">
+        <button id="followupBtn" onclick="triggerFollowup()" style="display:none;">Ask Follow-up</button>
+        <button id="nextBtn" onclick="nextQuestion()" style="display:none;">Next Question</button>
+      </div>
+    </main>
+  </body>
 </html>

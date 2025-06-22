@@ -9,6 +9,7 @@ import base64
 import re
 import firebase_admin
 from firebase_admin import credentials, firestore, auth as fb_auth, storage
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -18,8 +19,10 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "this_should_be_configured")
 
 # Firebase setup
 cred = credentials.Certificate("firebase_service_account.json")
-firebase_admin.initialize_app(cred)
-# bucket = storage.bucket(name=os.getenv("FIREBASE_STORAGE_BUCKET"))
+firebase_admin.initialize_app(cred, {
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET")
+})
+bucket = storage.bucket(name=os.getenv("FIREBASE_STORAGE_BUCKET"))
 db = firestore.client()
 
 # Google OAuth setup (for Gmail sending only)
@@ -59,7 +62,7 @@ google_login = oauth.register(
 def home():
     return render_template("home.html")
 
-@app.route("/form")
+@app.route("/generate-email", methods=["GET"])
 def show_form():
     if "user_email" not in session:
         return redirect("/login")
@@ -93,14 +96,14 @@ def signup():
         })
         session["user_email"] = email
         session["user_name"] = full_name
-        return redirect("/form")
+        return redirect("/generate-email")
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route("/login", methods=["POST"])
 def login_user():
     email = request.form.get("email")
-    password = request.form.get("passwoh rd")
+    password = request.form.get("password")
 
     if not all([email, password]):
         return jsonify({"error": "Missing email or password"}), 400
@@ -131,13 +134,87 @@ def login_user():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/resume-upload')
-def resume_upload():
+@app.route('/resume-upload', methods=["GET"])
+def resume():
     if "user_email" not in session:
         return redirect("/login")
+    return render_template("resume-upload.html")
     
+@app.route('/resume-upload', methods=["POST"])
+def resume_upload():
+    user_email = session["user_email"]
+    file = request.files.get("resume")
 
-    
+    if not file:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    if not file.filename.endswith(".pdf"):
+        return jsonify({"error": "Only PDF files allowed"}), 400
+
+    # Generate a unique filename (optional)
+    filename = f"{uuid.uuid4()}_{file.filename}"
+
+    blob = bucket.blob(f"resumes/{user_email}/{filename}")
+    blob.upload_from_file(file, content_type="application/pdf")
+
+    # Save metadata in Firestore
+    db = firestore.client()
+    db.collection("users").document(user_email).set({
+        "resume_filename": filename
+    }, merge=True)
+
+    return jsonify({"message": "Resume uploaded successfully"}), 200
+
+@app.route('/resume-download', methods=["GET"])
+def resume_download():
+    if "user_email" not in session:
+        return redirect("/login")
+
+    user_email = session["user_email"]
+    db = firestore.client()
+    doc = db.collection("users").document(user_email).get()
+
+    if not doc.exists or "resume_filename" not in doc.to_dict():
+        return jsonify({"error": "No resume found"}), 404
+
+    filename = doc.to_dict()["resume_filename"]
+    blob = storage.bucket().blob(f"resumes/{user_email}/{filename}")
+
+    # Public download
+    blob.make_public()
+    return redirect(blob.public_url)
+
+@app.route('/resume-delete', methods=["DELETE"])
+def resume_delete():
+    if "user_email" not in session:
+        return jsonify({"error": "Not authenticated"}), 401
+
+    user_email = session["user_email"]
+    db = firestore.client()
+    doc_ref = db.collection("users").document(user_email)
+    doc = doc_ref.get()
+
+    if not doc.exists or "resume_filename" not in doc.to_dict():
+        return jsonify({"error": "No resume found"}), 404
+
+    filename = doc.to_dict()["resume_filename"]
+    blob = storage.bucket().blob(f"resumes/{user_email}/{filename}")
+
+    try:
+        blob.delete()
+        doc_ref.update({
+            "resume_filename": firestore.DELETE_FIELD,
+            "resume_url": firestore.DELETE_FIELD
+        })
+        return jsonify({"message": "Resume deleted successfully"}), 200
+
+    except Exception as e:
+        print("Resume delete error:", e)
+        return jsonify({"error": "Failed to delete resume"}), 500
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -268,7 +345,7 @@ def google_authorize():
 
         session["user_email"] = email
         session["user_name"] = name
-        return redirect("/form")
+        return redirect("/generate-email")
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

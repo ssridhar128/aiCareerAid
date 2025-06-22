@@ -83,8 +83,11 @@ body.dark-mode {
 }
 
 .error-mess {
+    align-self: flex-start;
+    margin-bottom: 1.5rem;
+    width: 90%;
     margin: 0 auto 1.5rem;
-    justify-content: middle;
+    justify-content: left;
 }
 
 button {

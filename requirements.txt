@@ -3,3 +3,8 @@ requests
 python-dotenv
 PyMuPDF
 authlib
+flask-cors
+groq
+PyPDF2
+pyAudioAnalysis
+scipy

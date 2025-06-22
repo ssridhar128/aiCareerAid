@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Resume | AI Career Aid</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
+</head>
+<body class="dark-mode">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">AI Career Aid</div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/logout">Log Out</a></li>
+    </ul>
+  </nav>
+
+  <!-- Upload Container -->
+  <div class="auth-container">
+    <h2>Upload Your Resume</h2>
+
+    <form id="resumeUploadForm" class="auth-form" enctype="multipart/form-data">
+      <input type="file" name="resume" id="resume" accept="application/pdf" required />
+      <label class="upload-label" for="resume">Accepted format: PDF only</label>
+      <button type="submit">Upload Resume</button>
+      <div id="uploadStatus" class="upload-label" style="margin-top: 1rem;"></div>
+
+    <!-- Action Buttons -->
+      <div class="button-wrapper" style="margin-top: 1.5rem;">
+        <button id="downloadResumeBtn">📥 Download Resume</button>
+        <button id="deleteResumeBtn" style="margin-left: 1rem;">🗑️ Delete Resume</button>
+      </div>
+  </div>
+    </form>
+
+    <!-- Upload Status -->
+    
+
+  <script>
+    const uploadForm = document.getElementById('resumeUploadForm');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const downloadBtn = document.getElementById('downloadResumeBtn');
+    const deleteBtn = document.getElementById('deleteResumeBtn');
+
+    // Upload Handler
+    uploadForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(uploadForm);
+
+      uploadStatus.innerText = "⏳ Uploading...";
+      try {
+        const res = await fetch('/resume-upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          uploadStatus.innerText = "✅ Resume uploaded successfully!";
+        } else {
+          uploadStatus.innerText = `❌ ${data.error}`;
+        }
+      } catch (err) {
+        console.error(err);
+        uploadStatus.innerText = "❌ Network error. Please try again.";
+      }
+    });
+
+    // Download Resume
+    downloadBtn.addEventListener('click', () => {
+      // Just redirect the browser — avoids CORS completely
+      window.location.href = '/resume-download';
+    });
+
+    // Delete Resume
+    deleteBtn.addEventListener('click', async () => {
+      const confirmed = confirm("Are you sure you want to delete your uploaded resume?");
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch('/resume-delete', { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok) {
+          alert("🗑️ Resume deleted.");
+        } else {
+          alert(`Error: ${data.error}`);
+        }
+      } catch (err) {
+        alert("❌ Network error. Try again.");
+        console.error(err);
+      }
+    });
+  </script>
+
+</body>
+</html>
+

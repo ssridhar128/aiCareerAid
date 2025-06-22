@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, Blueprint, app, request, jsonify, redirect
+from flask import Flask, Blueprint, app, request, jsonify, redirect, render_template
 from werkzeug.utils import secure_filename
 from utils.post_audio import feedback, follow_up_thread
 from utils.resume_utils import extract_text, res_sum
@@ -17,7 +17,11 @@ ALLOWED_EXTENSIONS = {"pdf", "wav"}
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
    
-    
+@full_process_bp.route("/")
+def home():
+    return render_template("index.html")
+
+
 @full_process_bp.route("/resume", methods=["POST"])
 def resume():
     file = request.files.get("resume")
@@ -90,9 +94,11 @@ def audio_recording():
 def post_quest():
     questions = session.get("questions")
     q_thread = questions[f"question{session.get('curr_index')}"]
-    responses = session.get("responses")
-    r_thread = responses[f"question{session.get('curr_index')}"]
-    question = follow_up_thread(q_thread,r_thread, session.get("resume"), session.get("job"), session.get("industry"), session.get("level"))["new_q"]
+    question = ""
+    if(len(q_thread) == 1):
+        responses = session.get("responses")
+        r_thread = responses[f"question{session.get('curr_index')}"]
+        question = follow_up_thread(q_thread,r_thread, session.get("resume"), session.get("job"), session.get("industry"), session.get("level"))["new_q"]
     if(question != ""):
         q_thread.append(question)
         questions[f"question{session.get('curr_index')}"] = q_thread

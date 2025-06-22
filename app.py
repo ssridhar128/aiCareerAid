@@ -1,11 +1,14 @@
 from flask import Flask
+import os
 from flask_cors import CORS
-from routes.full_process import full_process_bp 
+from full_process import full_process_bp 
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY")
 CORS(app)
 
 # Register blueprints
@@ -13,7 +16,7 @@ app.register_blueprint(full_process_bp, url_prefix="/full")
 
 @app.route("/")
 def health():
-    return {"status: ok" }, 200
+    return {"status": "ok"}, 200
     
 
 

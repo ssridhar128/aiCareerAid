@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Career Aid — Cold Email Generator</title>
+  <link rel="stylesheet" href="/static/email.css">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+  <nav class="navbar">
+    <div class="logo"><a href="/">🎓AI Career Aid</a></div>
+    <ul class="nav-links">
+      <li><a href="/resume-upload">Resume Upload</a></li>
+      <li><a href="/generate-email">Generate Email</a></li>
+      <li><a href="/logout">Log Out</a></li>
+    </ul>
+  </nav>
+
+  <main class="auth-container">
+    <div class="title">
+      <h1>Cold Email Generator</h1>
+    </div>
+    <form id="emailForm" class="auth-form">
+      <div class="input-forms">
+        <input type="text" id="company" name="company" placeholder="Company Name" required />
+        <input type="text" id="recruiter_name" name="recruiter_name" placeholder="Recruiter Name" required />
+        <input type="email" id="recruiter_email" name="recruiter_email" placeholder="Recruiter Email" required />
+        <button type="submit">Generate Email</button>
+      </div>
+    </form>
+
+    <div class="error-mess" >
+      <div id="output" class="email-preview upload-label" style="display: none; white-space: pre-wrap; margin-top: 1.5rem;"></div>
+    </div>
+
+    <div class="button-wrapper">
+      <button id="sendButton" style="display: none;">✉️ Send with Gmail</button>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('emailForm');
+    const output = document.getElementById('output');
+    const sendButton = document.getElementById('sendButton');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+
+      output.style.display = 'block';
+      output.innerText = "⏳ Generating email...";
+
+      try {
+        const response = await fetch('/generate-email', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          output.innerText = data.email;
+          sendButton.style.display = 'inline-block';
+        } else {
+          output.innerText = `❌ Error: ${data.error || 'Unknown error'}`;
+        }
+      } catch (err) {
+        output.innerText = "❌ Failed to generate email. Try again.";
+      }
+    });
+
+    sendButton.addEventListener('click', () => {
+      window.location.href = "/gmail-login";
+    });
+  </script>
+</body>
+</html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Upload Resume | AI Career Aid</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/resume.css" />
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet" />
 </head>
 <body class="dark-mode">
@@ -27,18 +27,11 @@
       <input type="file" name="resume" id="resume" accept="application/pdf" required />
       <label class="upload-label" for="resume">Accepted format: PDF only</label>
       <button type="submit">Upload Resume</button>
+      <button id="downloadResumeBtn" type="button">📥 Download Resume</button>
+      <button id="deleteResumeBtn" type="button">🗑️ Delete Resume</button>
       <div id="uploadStatus" class="upload-label" style="margin-top: 1rem;"></div>
-
-    <!-- Action Buttons -->
-      <div class="button-wrapper" style="margin-top: 1.5rem;">
-        <button id="downloadResumeBtn">📥 Download Resume</button>
-        <button id="deleteResumeBtn" style="margin-left: 1rem;">🗑️ Delete Resume</button>
-      </div>
-  </div>
     </form>
-
-    <!-- Upload Status -->
-    
+  </div>
 
   <script>
     const uploadForm = document.getElementById('resumeUploadForm');
@@ -98,4 +91,5 @@
 
 </body>
 </html>
+
 

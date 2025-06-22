@@ -167,7 +167,7 @@
 
   <div id="output" class="email-preview" style="display: none;"></div>
 
-  <button id="sendButton" style="display: none;">✉️ Send with Gmail</button>
+  <button id="sendButton" style="display: none;">Send with Gmail</button>
 
   <script>
     const form = document.getElementById('emailForm');
@@ -179,7 +179,7 @@
       const formData = new FormData(form);
 
       output.style.display = 'block';
-      output.innerText = "⏳ Generating email...";
+      output.innerText = "Generating email...";
 
       try {
         const response = await fetch('/generate-email', {
@@ -193,10 +193,10 @@
           output.innerText = data.email;
           sendButton.style.display = 'inline-block';
         } else {
-          output.innerText = `❌ Error: ${data.error || 'Unknown error'}`;
+          output.innerText = `Error: ${data.error || 'Unknown error'}`;
         }
       } catch (err) {
-        output.innerText = "❌ Failed to generate email. Try again.";
+        output.innerText = "Failed to generate email. Try again.";
       }
     });
 

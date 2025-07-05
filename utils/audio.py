@@ -20,7 +20,7 @@ api_key = os.getenv("GROQ_API_KEY")
 
 def audio_to_text(audio_path):
     client = Groq(api_key=api_key)
-    filename = os.path.dirname(audio_path) + audio_path
+    filename = audio_path
 
     with open(filename, "rb") as file:
         chat_completion = client.audio.transcriptions.create(

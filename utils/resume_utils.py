@@ -3,6 +3,7 @@ import os
 from groq import Groq
 import json
 import re
+api_key = os.getenv("GROQ_API_KEY")
 
 def extract_text(pdf_path):
     with open(pdf_path, 'rb') as pdf:
@@ -25,7 +26,7 @@ def extract_text(pdf_path):
         return '\n\n'.join(pdf_text)
     
 def res_sum(job, resume_text):
-    client = Groq(api_key='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')
+    client = Groq(api_key=api_key)
 
     system_prompt = """
     You are a resume parsing assistant. Extract structured data from resumes that is most relevant to the job they are applying for. Return only valid JSON with no extra text.

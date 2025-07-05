@@ -304,26 +304,26 @@ def generate_email():
         resume_summary = summary.strip()
 
         prompt = f"""
-You are a career assistant generating a cold email for a job or networking opportunity.
+        You are a career assistant generating a cold email for a job or networking opportunity.
 
-The user’s name is: {full_name}
+        The user’s name is: {full_name}
 
-Here is the user’s resume summary:
-{resume_summary}
+        Here is the user’s resume summary:
+        {resume_summary}
 
-They are reaching out to the following company or person:
-{recruiter_name} at {company}
+        They are reaching out to the following company or person:
+        {recruiter_name} at {company}
 
-Please generate the full body of a **professional, personalized cold email** that:
-- Starts with “Hi {recruiter_name or company},\nMy name is {full_name}.”
-- Clearly shows interest in the company
-- Mentions relevant experience from the resume
-- 500 words minumum
-- Ends with a polite ask
-- Signs off with "Sincerely,\n{full_name}"
-- No headings, no extra commentary in the beginning or the end
-- Write full paragraphs with natural spacing. No mid-sentence line breaks.
-"""
+        Please generate the full body of a **professional, personalized cold email** that:
+        - Starts with “Hi {recruiter_name or company},\nMy name is {full_name}.”
+        - Clearly shows interest in the company
+        - Mentions relevant experience from the resume
+        - 500 words minumum
+        - Ends with a polite ask
+        - Signs off with "Sincerely,\n{full_name}"
+        - No headings, no extra commentary in the beginning or the end
+        - Write full paragraphs with natural spacing. No mid-sentence line breaks.
+        """
 
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",

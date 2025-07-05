@@ -81,6 +81,7 @@ def questions():
 def audio_recording():
     audio_file = request.files.get("audio")
     if not audio_file:
+        console.log("NO AUDIO FILE")
         return jsonify({"error": "No audio uploaded"}), 400
 
     
@@ -104,7 +105,10 @@ def audio_recording():
 
     responses = session.get("responses")
     q_key = f"question{session.get('curr_index')}"
-    responses.setdefault(q_key, []).append(audio_to_text(wav_path))
+    answer = audio_to_text(wav_path).text
+    print(f"AHHHHH q NAME: {answer}")
+    
+    responses.setdefault(q_key, []).append(answer)
     session["responses"] = responses
 
     return jsonify({"message": "Audio processed successfully"})
